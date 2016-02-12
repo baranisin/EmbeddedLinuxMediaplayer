@@ -98,7 +98,10 @@ index 247c0ed..c51de4a 100644
 +++ b/package/busybox/mdev.conf
 @@ -1,4 +1,5 @@
  # null may already exist; therefore ownership has to be changed with command
++sd[a-z]          0:6     660
++mmcblk[0-9]     0:6     660
 +sd[a-z][0-9]      0:6     660 */lib/mdev/automounter.sh
++mmcblk[0-9]p[0-9] 0:6     660 */lib/mdev/automounter.sh
  null		root:root 666 @chmod 666 $MDEV
  zero		root:root 666
  full		root:root 666
