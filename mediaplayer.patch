@@ -1,0 +1,133 @@
+diff --git a/board/qemu/arm-versatile/mediaplayer.config b/board/qemu/arm-versatile/mediaplayer.config
+new file mode 100644
+index 0000000..471513f
+--- /dev/null
++++ b/board/qemu/arm-versatile/mediaplayer.config
+@@ -0,0 +1,50 @@
++CONFIG_SYSVIPC=y
++CONFIG_MODULES=y
++CONFIG_MODULE_UNLOAD=y
++CONFIG_ARCH_VERSATILE=y
++CONFIG_MACH_VERSATILE_AB=y
++CONFIG_MACH_VERSATILE_DT=y
++CONFIG_PCI=y
++CONFIG_AEABI=y
++CONFIG_ZBOOT_ROM_TEXT=0x0
++CONFIG_ZBOOT_ROM_BSS=0x0
++CONFIG_NET=y
++CONFIG_PACKET=y
++CONFIG_UNIX=y
++CONFIG_INET=y
++CONFIG_DEVTMPFS=y
++CONFIG_DEVTMPFS_MOUNT=y
++CONFIG_SCSI=y
++CONFIG_BLK_DEV_SD=y
++CONFIG_SCSI_SYM53C8XX_2=y
++CONFIG_NETDEVICES=y
++CONFIG_8139CP=y
++CONFIG_PHYLIB=y
++CONFIG_INPUT_EVDEV=y
++CONFIG_SERIO_AMBAKMI=y
++CONFIG_LEGACY_PTY_COUNT=16
++CONFIG_SERIAL_8250=m
++CONFIG_SERIAL_8250_EXTENDED=y
++CONFIG_SERIAL_8250_MANY_PORTS=y
++CONFIG_SERIAL_8250_SHARE_IRQ=y
++CONFIG_SERIAL_8250_RSA=y
++CONFIG_SERIAL_AMBA_PL011=y
++CONFIG_SERIAL_AMBA_PL011_CONSOLE=y
++CONFIG_I2C=y
++CONFIG_I2C_CHARDEV=m
++CONFIG_FB=y
++CONFIG_FB_ARMCLCD=y
++CONFIG_FRAMEBUFFER_CONSOLE=y
++CONFIG_SOUND=y
++CONFIG_SND=m
++CONFIG_SND_MIXER_OSS=m
++CONFIG_SND_PCM_OSS=m
++CONFIG_SND_ARMAACI=m
++CONFIG_USB=y
++CONFIG_USB_OHCI_HCD=y
++CONFIG_USB_STORAGE=y
++CONFIG_EXT4_FS=y
++CONFIG_VFAT_FS=m
++CONFIG_TMPFS=y
++CONFIG_TMPFS_POSIX_ACL=y
++CONFIG_MAGIC_SYSRQ=y
+diff --git a/board/qemu/arm-versatile/readme.txt b/board/qemu/arm-versatile/readme.txt
+index 44d70d8..6208167 100644
+--- a/board/qemu/arm-versatile/readme.txt
++++ b/board/qemu/arm-versatile/readme.txt
+@@ -1,6 +1,6 @@
+ Run the emulation with:
+
+-  qemu-system-arm -M versatilepb -kernel output/images/zImage -dtb output/images/versatile-pb.dtb -drive file=output/images/rootfs.ext2,if=scsi,format=raw -append "root=/dev/sda console=ttyAMA0,115200" -serial stdio -net nic,model=rtl8139 -net user
++  qemu-system-arm -M versatilepb -kernel output/images/zImage -dtb output/images/versatile-pb.dtb -drive file=output/images/rootfs.ext2,if=scsi,format=raw -append "root=/dev/sda console=ttyAMA0,115200" -serial stdio -net nic,model=rtl8139 -net user -usb -usbdevice host:0951:1689
+
+ The login prompt will appear in the terminal that started Qemu. The
+ graphical window is the framebuffer.
+diff --git a/configs/qemu_arm_mediaplayer_defconfig b/configs/qemu_arm_mediaplayer_defconfig
+new file mode 100644
+index 0000000..fb9313b
+--- /dev/null
++++ b/configs/qemu_arm_mediaplayer_defconfig
+@@ -0,0 +1,20 @@
++BR2_arm=y
++BR2_TOOLCHAIN_EXTERNAL=y
++BR2_ROOTFS_DEVICE_CREATION_DYNAMIC_MDEV=y
++BR2_TARGET_GENERIC_GETTY_PORT="ttyAMA0"
++BR2_SYSTEM_DHCP="eth0"
++BR2_LINUX_KERNEL=y
++BR2_LINUX_KERNEL_CUSTOM_VERSION=y
++BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE="4.4.1"
++BR2_LINUX_KERNEL_USE_CUSTOM_CONFIG=y
++BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE="board/qemu/arm-versatile/mediaplayer.config"
++BR2_LINUX_KERNEL_ZIMAGE=y
++BR2_LINUX_KERNEL_DTS_SUPPORT=y
++BR2_LINUX_KERNEL_INTREE_DTS_NAME="versatile-pb"
++BR2_PACKAGE_ALSA_UTILS=y
++BR2_PACKAGE_ALSA_UTILS_ALSACONF=y
++BR2_PACKAGE_ALSA_UTILS_AMIXER=y
++BR2_PACKAGE_ALSA_UTILS_APLAY=y
++BR2_PACKAGE_MPG123=y
++BR2_TARGET_ROOTFS_EXT2=y
++# BR2_TARGET_ROOTFS_TAR is not set
+diff --git a/package/busybox/mdev.conf b/package/busybox/mdev.conf
+index 247c0ed..c51de4a 100644
+--- a/package/busybox/mdev.conf
++++ b/package/busybox/mdev.conf
+@@ -1,4 +1,5 @@
+ # null may already exist; therefore ownership has to be changed with command
++sd[a-z][0-9]      0:6     660 */lib/mdev/automounter.sh
+ null		root:root 666 @chmod 666 $MDEV
+ zero		root:root 666
+ full		root:root 666
+diff --git a/system/skeleton/etc/fstab b/system/skeleton/etc/fstab
+index 2b418a0..c38f611 100644
+--- a/system/skeleton/etc/fstab
++++ b/system/skeleton/etc/fstab
+@@ -5,4 +5,5 @@ devpts		/dev/pts	devpts	defaults,gid=5,mode=620	0	0
+ tmpfs		/dev/shm	tmpfs	mode=0777	0	0
+ tmpfs		/tmp		tmpfs	mode=1777	0	0
+ tmpfs		/run		tmpfs	mode=0755,nosuid,nodev	0	0
++tmpfs   /media  tmpfs defaults  0 0
+ sysfs		/sys		sysfs	defaults	0	0
+diff --git a/system/skeleton/etc/mdev.conf b/system/skeleton/etc/mdev.conf
+new file mode 100644
+index 0000000..9e61175
+--- /dev/null
++++ b/system/skeleton/etc/mdev.conf
+@@ -0,0 +1,4 @@
++sd[a-z]          0:6     660
++mmcblk[0-9]     0:6     660
++sd[a-z][0-9]      0:6     660 */lib/mdev/automounter.sh
++mmcblk[0-9]p[0-9] 0:6     660 */lib/mdev/automounter.sh
+diff --git a/system/skeleton/lib/mdev/automounter.sh b/system/skeleton/lib/mdev/automounter.sh
+new file mode 100755
+index 0000000..2bc9a0c
+--- /dev/null
++++ b/system/skeleton/lib/mdev/automounter.sh
+@@ -0,0 +1,3 @@
++#!/bin/busybox ash
++mount /dev/${MDEV} /media
++find /media -name "*.mp3" -print0 | xargs -0 mpg123
